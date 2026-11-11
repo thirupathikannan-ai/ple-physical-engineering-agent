@@ -1,0 +1,7 @@
+
+name: ple-physical-engineering-agent
+model_api: google-cloud/gemini-3.8-flash
+install: >-
+  uv venv --python 3.12 /opt/harness/venv
+  && uv pip install --python /opt/harness/venv/bin/python -r {src}/requirements.txt
+serve: /opt/harness/venv/bin/python {src}/serve.py
