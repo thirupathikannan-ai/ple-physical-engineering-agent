@@ -14,13 +14,20 @@ jobs:
 
       - name: Check Docker
         run: |
-          echo "=== DOCKER VERSION ==="
           docker --version
-          echo ""
-          echo "=== DOCKER STATUS ==="
           docker info
 
-      - name: Check required credentials
+      - name: Install uv and Harbor
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
+
+          uv --version
+          uv tool install harbor==0.20.0 --with websockets
+          uv tool run --from harbor==0.20.0 harbor --version
+
+      - name: Check credentials
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           MODEL_PROXY_URL: ${{ secrets.MODEL_PROXY_URL }}
@@ -29,15 +36,13 @@ jobs:
           python - <<'PY'
           import os
 
-          names = [
+          for name in [
               "HF_TOKEN",
               "MODEL_PROXY_URL",
-              "MODEL_PROXY_KEY",
-          ]
-
-          print("=== CREDENTIAL AVAILABILITY ===")
-
-          for name in names:
-              status = "CONFIGURED" if os.environ.get(name) else "NOT CONFIGURED"
-              print(f"{name}: {status}")
+              "MODEL_PROXY_KEY"
+          ]:
+              print(
+                  f"{name}: "
+                  f"{'CONFIGURED' if os.environ.get(name) else 'NOT CONFIGURED'}"
+              )
           PY
